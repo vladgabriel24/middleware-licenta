@@ -9,10 +9,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func bashExec(pathToScript string, parameters ...string) ([]byte, error) {
+
+	args := append([]string{pathToScript}, parameters...)
+
+	output, err := exec.Command("bash", args...).Output()
+
+	return output, err
+}
+
 func getNume(c *gin.Context) {
 
-	cmd := exec.Command("bash", "/var/lib/licenta/api/get_nume_produs_sistem.sh")
-	output, err := cmd.Output()
+	output, err := bashExec("/var/lib/licenta/api/get_nume_produs_sistem.sh")
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
 		return
@@ -23,8 +31,7 @@ func getNume(c *gin.Context) {
 
 func getSerial(c *gin.Context) {
 
-	cmd := exec.Command("bash", "/var/lib/licenta/api/get_numar_serial_sistem.sh")
-	output, err := cmd.Output()
+	output, err := bashExec("/var/lib/licenta/api/get_numar_serial_sistem.sh")
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
 		return
@@ -35,8 +42,7 @@ func getSerial(c *gin.Context) {
 
 func getFurnizor(c *gin.Context) {
 
-	cmd := exec.Command("bash", "/var/lib/licenta/api/get_furnizor_sistem.sh")
-	output, err := cmd.Output()
+	output, err := bashExec("/var/lib/licenta/api/get_furnizor_sistem.sh")
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
 		return
@@ -47,8 +53,7 @@ func getFurnizor(c *gin.Context) {
 
 func getProcesor(c *gin.Context) {
 
-	cmd := exec.Command("bash", "/var/lib/licenta/api/get_procesor_sistem.sh")
-	output, err := cmd.Output()
+	output, err := bashExec("/var/lib/licenta/api/get_procesor_sistem.sh")
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
 		return
@@ -59,8 +64,7 @@ func getProcesor(c *gin.Context) {
 
 func getPlaciRetea(c *gin.Context) {
 
-	cmd := exec.Command("bash", "/var/lib/licenta/api/get_placi_retea.sh")
-	output, err := cmd.Output()
+	output, err := bashExec("/var/lib/licenta/api/get_placi_retea.sh")
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
 		return
@@ -75,8 +79,7 @@ func getStarePlacaRetea(c *gin.Context) {
 
 	param := c.Query("param")
 
-	cmd := exec.Command("bash", "/var/lib/licenta/api/get_stare_placa_retea.sh", param)
-	output, err := cmd.Output()
+	output, err := bashExec("/var/lib/licenta/api/get_stare_placa_retea.sh", param)
 	fmt.Println(err)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
@@ -90,8 +93,7 @@ func getDateTransmisePlacaRetea(c *gin.Context) {
 
 	param := c.Query("param")
 
-	cmd := exec.Command("bash", "/var/lib/licenta/api/get_date_transmise_placa_retea.sh", param)
-	output, err := cmd.Output()
+	output, err := bashExec("/var/lib/licenta/api/get_date_transmise_placa_retea.sh", param)
 	fmt.Println(err)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
@@ -105,8 +107,7 @@ func getDateReceptionatePlacaRetea(c *gin.Context) {
 
 	param := c.Query("param")
 
-	cmd := exec.Command("bash", "/var/lib/licenta/api/get_date_receptionate_placa_retea.sh", param)
-	output, err := cmd.Output()
+	output, err := bashExec("/var/lib/licenta/api/get_date_receptionate_placa_retea.sh", param)
 	fmt.Println(err)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
@@ -120,8 +121,7 @@ func getDateAruncatePlacaRetea(c *gin.Context) {
 
 	param := c.Query("param")
 
-	cmd := exec.Command("bash", "/var/lib/licenta/api/get_date_aruncate_placa_retea.sh", param)
-	output, err := cmd.Output()
+	output, err := bashExec("/var/lib/licenta/api/get_date_aruncate_placa_retea.sh", param)
 	fmt.Println(err)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
