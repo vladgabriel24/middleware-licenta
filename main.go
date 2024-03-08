@@ -31,7 +31,9 @@ func getNume(c *gin.Context) {
 
 func getSerial(c *gin.Context) {
 
-	output, err := bashExec("/var/lib/licenta/api/get_numar_serial_sistem.sh")
+	password := "licenta" // de facut cu vault!
+
+	output, err := bashExec("/var/lib/licenta/api/get_numar_serial_sistem.sh", password)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
 		return
@@ -143,5 +145,5 @@ func main() {
 	router.GET("/get-date-receptionate-placa-retea", getDateReceptionatePlacaRetea)
 	router.GET("/get-date-aruncate-placa-retea", getDateAruncatePlacaRetea)
 
-	router.Run("localhost:8080")
+	router.Run("192.168.56.101:8080")
 }
