@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"os/exec"
@@ -129,4 +130,17 @@ func getDateAruncatePlacaRetea(c *gin.Context) {
 	}
 
 	c.String(http.StatusOK, "%s", output)
+}
+
+func loadDB(c *gin.Context, db *sql.DB, rootpass string) {
+
+	err := LoadDatabase(db, rootpass)
+
+	fmt.Println(err)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, "Failed to load the database")
+		return
+	}
+
+	c.String(http.StatusOK, "%s", "Database Loaded")
 }

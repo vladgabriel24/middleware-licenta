@@ -2,58 +2,197 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func ConnectDB(user string, pass string, port int) (*sql.DB, error) {
 
+	fmt.Println("Connecting to the database...")
+
 	dsn := user + ":" + pass + "@" + "(localhost:" + strconv.Itoa(port) + ")/metriciDB"
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
+		fmt.Println("An Error appeared while connecting to the database...")
 		return nil, err
 	}
+
+	fmt.Println("Connected to the database.")
 	return db, nil
 }
 
-func initDB(user string, pass string, port int) {
+func initDB(user string, pass string, port int) *sql.DB {
 
 	db, errdb := ConnectDB(user, pass, port)
 	if errdb != nil {
 		log.Fatal(errdb)
 	}
-	defer db.Close()
+	// defer db.Close()
+
+	return db
 
 }
 
-// func LoadDatabase(db *sql.DB) error {
+func LoadDatabase(db *sql.DB, rootpass string) error {
 
-// 	password := "licenta" // de facut cu vault!
+	// Preluam informatiile de sistem
+	produs, errProdus := bashExec("/var/lib/licenta/api-licenta/get_nume_produs_sistem.sh")
+	if errProdus != nil {
+		return errProdus
+	}
+	fmt.Println(string(produs))
 
-// 	produs, err := bashExec("/var/lib/licenta/api/get_nume_produs_sistem.sh")
+	serial, errSerial := bashExec("/var/lib/licenta/api-licenta/get_numar_serial_sistem.sh", rootpass)
+	if errSerial != nil {
+		return errSerial
+	}
+	fmt.Println(string(serial))
 
-// 	serial, err := bashExec("/var/lib/licenta/api/get_numar_serial_sistem.sh", password)
+	furnizor, errFurnizor := bashExec("/var/lib/licenta/api-licenta/get_furnizor_sistem.sh")
+	if errFurnizor != nil {
+		return errFurnizor
+	}
+	fmt.Println(string(furnizor))
 
-// 	furnizor, err := bashExec("/var/lib/licenta/api/get_furnizor_sistem.sh")
+	procesor, errProcesor := bashExec("/var/lib/licenta/api-licenta/get_procesor_sistem.sh")
+	if errProcesor != nil {
+		return errProcesor
+	}
+	fmt.Println(string(procesor))
 
-// 	procesor, err := bashExec("/var/lib/licenta/api/get_procesor_sistem.sh")
+	// Introducem/Updatam datele de sistem in tabelele foloste de tblSistem
+	_, errTblProducator := db.Exec(
+		`INSERT INTO
+		tblProducator (numeProducator)
+		VALUES
+		(?)`,
+		string(furnizor))
 
-// 	placi_retea, err := bashExec("/var/lib/licenta/api/get_placi_retea.sh")
+	if errTblProducator != nil {
+		fmt.Println(errTblProducator)
+	}
 
-// 	// stare_nic, err := bashExec("/var/lib/licenta/api/get_stare_placa_retea.sh", param) cu array-ul din placi retea
+	_, errTblModel := db.Exec(
+		`INSERT INTO
+		tblModel (numeModel)
+		VALUES (?)`,
+		string(produs))
 
-// 	// tx_nic, err := bashExec("/var/lib/licenta/api/get_date_transmise_placa_retea.sh", param) cu array-ul din placi retea
+	if errTblModel != nil {
+		fmt.Println(errTblModel)
+	}
 
-// 	// rx_nic, err := bashExec("/var/lib/licenta/api/get_date_receptionate_placa_retea.sh", param) cu array-ul din placi retea
+	_, errTblProcesor := db.Exec(
+		`INSERT INTO
+		tblProcesor (numeProcesor)
+		VALUES
+		(?)`,
+		string(procesor))
 
-// 	// dropped_nic, err := bashExec("/var/lib/licenta/api/get_date_aruncate_placa_retea.sh", param) cu array-ul din placi retea
+	if errTblProcesor != nil {
+		fmt.Println(errTblProcesor)
+	}
 
-// 	_, errdb := db.Exec("INSERT INTO table_name (column_name) VALUES (?)", "value")
-// 	if errdb != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+	_, errTblSistem := db.Exec(
+		`INSERT INTO
+		tblSistem (numarSerial,modelProcesor,producatorSistem,modelSistem)
+		VALUES (
+			?,
+			(
+				SELECT idProcesor
+				FROM tblProcesor
+				WHERE numeProcesor = ?
+			),
+			(
+				SELECT idProducator
+				FROM tblProducator
+				WHERE numeProducator = ?
+			),
+			(
+				SELECT idModel
+				FROM tblModel
+				WHERE numeModel = ?
+			)
+		)`,
+		string(serial), string(procesor), string(furnizor), string(produs))
+
+	if errTblSistem != nil {
+		fmt.Println(errTblSistem)
+	}
+
+	placi_retea, errNIC := bashExec("/var/lib/licenta/api-licenta/get_placi_retea.sh")
+	if errNIC != nil {
+		return errNIC
+	}
+
+	NICs := strings.Split(string(placi_retea), "\n")
+	NICs = NICs[:len(NICs)-1]
+
+	fmt.Println(len(NICs))
+
+	for i := 0; i < len(NICs); i++ {
+
+		fmt.Println(NICs[i])
+
+		stare_nic, errStareNIC := bashExec("/var/lib/licenta/api-licenta/get_stare_placa_retea.sh", NICs[i])
+		if errStareNIC != nil {
+			return errStareNIC
+		}
+		fmt.Println(string(stare_nic))
+
+		tx_nic, errTxNIC := bashExec("/var/lib/licenta/api-licenta/get_date_transmise_placa_retea.sh", NICs[i])
+		if errTxNIC != nil {
+			return errTxNIC
+		}
+		fmt.Println(string(tx_nic))
+
+		rx_nic, errRxNIC := bashExec("/var/lib/licenta/api-licenta/get_date_receptionate_placa_retea.sh", NICs[i])
+		if errRxNIC != nil {
+			return errRxNIC
+		}
+		fmt.Println(string(rx_nic))
+
+		dropped_nic, errDroppedNIC := bashExec("/var/lib/licenta/api-licenta/get_date_aruncate_placa_retea.sh", NICs[i])
+		if errDroppedNIC != nil {
+			return errDroppedNIC
+		}
+		fmt.Println(string(dropped_nic))
+
+		_, errTblPlaciRetea := db.Exec(
+			`INSERT INTO
+			tblPlaciRetea (
+				modelSistem, 
+				numarSerialSistem, 
+				numePlacaRetea, 
+				starePlacaRetea,
+				pacheteAruncate,
+				dateReceptionate,
+				dateTransmise
+			)
+			VALUES (
+				(
+					SELECT idModel
+					FROM tblModel
+					WHERE numeModel = ?
+				),
+				?,
+				?,
+				?,
+				?,
+				?,
+				?
+			)`,
+			string(produs), string(serial), string(NICs[i]), string(stare_nic), string(dropped_nic), string(rx_nic), string(tx_nic))
+
+		if errTblPlaciRetea != nil {
+			fmt.Println(errTblPlaciRetea)
+		}
+	}
+
+	return nil
+}

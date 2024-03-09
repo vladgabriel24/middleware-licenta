@@ -11,6 +11,6 @@ func main() {
 	ip := "192.168.0.158"
 	port := 8080
 
-	initDB(userdb, passdb, portdb)
-	initRouters(ip, port, rootpass)
+	db := initDB(userdb, passdb, portdb)
+	initRouters(ip, port, rootpass, db)
 }
