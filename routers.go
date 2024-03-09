@@ -24,6 +24,9 @@ func initRouters(ip string, port int, rootpass string, database *sql.DB) {
 	router.POST("/load-db", func(ctx *gin.Context) {
 		loadDB(ctx, database, rootpass)
 	})
+	router.POST("/trigger-cron_db", func(ctx *gin.Context) {
+		triggerLoadDB(ctx, rootpass)
+	})
 
 	router.Run(ip + ":" + strconv.Itoa(port))
 }

@@ -144,3 +144,16 @@ func loadDB(c *gin.Context, db *sql.DB, rootpass string) {
 
 	c.String(http.StatusOK, "%s", "Database Loaded")
 }
+
+func triggerLoadDB(c *gin.Context, rootpass string) {
+
+	_, err := bashExec("/var/lib/licenta/api-licenta/update_db.sh", rootpass)
+
+	fmt.Println(err)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, "Failed to trigger the load database crontab job")
+		return
+	}
+
+	c.String(http.StatusOK, "%s", "Database Crontab Activated")
+}

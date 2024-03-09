@@ -8,7 +8,7 @@ func main() {
 	portdb := 3306
 	rootpass := "licenta"
 
-	ip := "192.168.0.158"
+	ip := "localhost"
 	port := 8080
 
 	db := initDB(userdb, passdb, portdb)
