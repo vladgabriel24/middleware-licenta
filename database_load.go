@@ -74,7 +74,7 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		string(furnizor))
 
 	if errTblProducator != nil {
-		if errTblProducator.(*mysql.MySQLError).Number == 1602 {
+		if errTblProducator.(*mysql.MySQLError).Number == 1062 {
 			fmt.Println("Producatorul se afla deja in baza de date")
 		} else {
 			return errTblProducator
@@ -88,7 +88,7 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		string(produs))
 
 	if errTblModel != nil {
-		if errTblModel.(*mysql.MySQLError).Number == 1602 {
+		if errTblModel.(*mysql.MySQLError).Number == 1062 {
 			fmt.Println("Modelul se afla deja in baza de date")
 		} else {
 			return errTblModel
@@ -103,7 +103,7 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		string(procesor))
 
 	if errTblProcesor != nil {
-		if errTblProcesor.(*mysql.MySQLError).Number == 1602 {
+		if errTblProcesor.(*mysql.MySQLError).Number == 1062 {
 			fmt.Println("Procesorul se afla deja in baza de date")
 		} else {
 			return errTblProcesor
@@ -134,7 +134,7 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		string(serial), string(procesor), string(furnizor), string(produs))
 
 	if errTblSistem != nil {
-		if errTblSistem.(*mysql.MySQLError).Number == 1602 {
+		if errTblSistem.(*mysql.MySQLError).Number == 1062 {
 			fmt.Println("Sistemul se afla deja in baza de date")
 		} else {
 			return errTblSistem
