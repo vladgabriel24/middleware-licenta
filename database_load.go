@@ -74,7 +74,7 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		string(furnizor))
 
 	if errTblProducator != nil {
-		if errTblProducator.(*mysql.MySQLError).Number == 1062 {
+		if errTblProducator.(*mysql.MySQLError).Number == 1062 { // Identificator pentru incalcarea constrangerii de unique
 			fmt.Println("Producatorul se afla deja in baza de date")
 		} else {
 			return errTblProducator
