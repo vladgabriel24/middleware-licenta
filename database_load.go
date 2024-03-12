@@ -10,11 +10,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func ConnectDB(user string, pass string, port int) (*sql.DB, error) {
+func ConnectDB(user string, pass string, ip string, port int) (*sql.DB, error) {
 
 	fmt.Println("Connecting to the database...")
 
-	dsn := user + ":" + pass + "@" + "(localhost:" + strconv.Itoa(port) + ")/metriciDB"
+	dsn := user + ":" + pass + "@" + "(" + ip + ":" + strconv.Itoa(port) + ")/metriciDB"
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -26,9 +26,9 @@ func ConnectDB(user string, pass string, port int) (*sql.DB, error) {
 	return db, nil
 }
 
-func initDB(user string, pass string, port int) *sql.DB {
+func initDB(user string, pass string, ip string, port int) *sql.DB {
 
-	db, errdb := ConnectDB(user, pass, port)
+	db, errdb := ConnectDB(user, pass, ip, port)
 	if errdb != nil {
 		log.Fatal(errdb)
 	}
