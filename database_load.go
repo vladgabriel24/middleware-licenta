@@ -206,7 +206,7 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 			string(produs), string(serial), string(NICs[i]), string(stare_nic), string(dropped_nic), string(rx_nic), string(tx_nic))
 
 		if errTblPlaciRetea != nil {
-			fmt.Println(errTblPlaciRetea)
+			return errTblPlaciRetea
 		}
 	}
 
