@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 )
 
 func ConnectDB(user string, pass string, ip string, port int) (*sql.DB, error) {
@@ -74,7 +74,11 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		string(furnizor))
 
 	if errTblProducator != nil {
-		fmt.Println(errTblProducator)
+		if errTblProducator.(*mysql.MySQLError).Number == 1602 {
+			fmt.Println("Producatorul se afla deja in baza de date")
+		} else {
+			return errTblProducator
+		}
 	}
 
 	_, errTblModel := db.Exec(
@@ -84,7 +88,11 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		string(produs))
 
 	if errTblModel != nil {
-		fmt.Println(errTblModel)
+		if errTblModel.(*mysql.MySQLError).Number == 1602 {
+			fmt.Println("Modelul se afla deja in baza de date")
+		} else {
+			return errTblModel
+		}
 	}
 
 	_, errTblProcesor := db.Exec(
@@ -95,7 +103,11 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		string(procesor))
 
 	if errTblProcesor != nil {
-		fmt.Println(errTblProcesor)
+		if errTblProcesor.(*mysql.MySQLError).Number == 1602 {
+			fmt.Println("Procesorul se afla deja in baza de date")
+		} else {
+			return errTblProcesor
+		}
 	}
 
 	_, errTblSistem := db.Exec(
@@ -122,7 +134,11 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		string(serial), string(procesor), string(furnizor), string(produs))
 
 	if errTblSistem != nil {
-		fmt.Println(errTblSistem)
+		if errTblSistem.(*mysql.MySQLError).Number == 1602 {
+			fmt.Println("Sistemul se afla deja in baza de date")
+		} else {
+			return errTblSistem
+		}
 	}
 
 	placi_retea, errNIC := bashExec("/var/lib/licenta/api-licenta/get_placi_retea.sh")
