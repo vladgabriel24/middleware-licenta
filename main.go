@@ -11,7 +11,7 @@ func main() {
 	rootpass := "licenta"
 
 	// Middleware env variables
-	ip := "localhost"
+	ip := "192.168.0.102"
 	port := 8080
 
 	db := initDB(userdb, passdb, ipdb, portdb)

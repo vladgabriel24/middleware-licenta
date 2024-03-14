@@ -38,48 +38,14 @@ func initDB(user string, pass string, ip string, port int) *sql.DB {
 
 }
 
-func LoadDatabase(db *sql.DB, rootpass string) error {
+func LoadTblModel(db *sql.DB) (string, error) {
 
 	// Preluam informatiile de sistem
 	produs, errProdus := bashExec("/var/lib/licenta/api-licenta/get_nume_produs_sistem.sh")
 	if errProdus != nil {
-		return errProdus
+		return "", errProdus
 	}
 	fmt.Println(string(produs))
-
-	serial, errSerial := bashExec("/var/lib/licenta/api-licenta/get_numar_serial_sistem.sh", rootpass)
-	if errSerial != nil {
-		return errSerial
-	}
-	fmt.Println(string(serial))
-
-	furnizor, errFurnizor := bashExec("/var/lib/licenta/api-licenta/get_furnizor_sistem.sh")
-	if errFurnizor != nil {
-		return errFurnizor
-	}
-	fmt.Println(string(furnizor))
-
-	procesor, errProcesor := bashExec("/var/lib/licenta/api-licenta/get_procesor_sistem.sh")
-	if errProcesor != nil {
-		return errProcesor
-	}
-	fmt.Println(string(procesor))
-
-	// Introducem/Updatam datele de sistem in tabelele foloste de tblSistem
-	_, errTblProducator := db.Exec(
-		`INSERT INTO
-		tblProducator (numeProducator)
-		VALUES
-		(?)`,
-		string(furnizor))
-
-	if errTblProducator != nil {
-		if errTblProducator.(*mysql.MySQLError).Number == 1062 { // Identificator pentru incalcarea constrangerii de unique
-			fmt.Println("Producatorul se afla deja in baza de date")
-		} else {
-			return errTblProducator
-		}
-	}
 
 	_, errTblModel := db.Exec(
 		`INSERT INTO
@@ -91,9 +57,48 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		if errTblModel.(*mysql.MySQLError).Number == 1062 {
 			fmt.Println("Modelul se afla deja in baza de date")
 		} else {
-			return errTblModel
+			return string(produs), errTblModel
 		}
 	}
+
+	return string(produs), nil
+}
+
+func LoadTblProducator(db *sql.DB) (string, error) {
+
+	// Preluam informatiile de sistem
+	furnizor, errFurnizor := bashExec("/var/lib/licenta/api-licenta/get_furnizor_sistem.sh")
+	if errFurnizor != nil {
+		return "", errFurnizor
+	}
+	fmt.Println(string(furnizor))
+
+	_, errTblProducator := db.Exec(
+		`INSERT INTO
+		tblProducator (numeProducator)
+		VALUES
+		(?)`,
+		string(furnizor))
+
+	if errTblProducator != nil {
+		if errTblProducator.(*mysql.MySQLError).Number == 1062 { // Identificator pentru incalcarea constrangerii de unique
+			fmt.Println("Producatorul se afla deja in baza de date")
+		} else {
+			return string(furnizor), errTblProducator
+		}
+	}
+
+	return string(furnizor), nil
+}
+
+func LoadTblProcesor(db *sql.DB) (string, error) {
+
+	// Preluam informatiile de sistem
+	procesor, errProcesor := bashExec("/var/lib/licenta/api-licenta/get_procesor_sistem.sh")
+	if errProcesor != nil {
+		return "", errProcesor
+	}
+	fmt.Println(string(procesor))
 
 	_, errTblProcesor := db.Exec(
 		`INSERT INTO
@@ -106,9 +111,22 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		if errTblProcesor.(*mysql.MySQLError).Number == 1062 {
 			fmt.Println("Procesorul se afla deja in baza de date")
 		} else {
-			return errTblProcesor
+			return string(procesor), errTblProcesor
 		}
 	}
+
+	return string(procesor), nil
+}
+
+func LoadTblSistem(db *sql.DB, rootpass string, procesor string, furnizor string, produs string) (string, error) {
+
+	// Preluam informatiile de sistem
+
+	serial, errSerial := bashExec("/var/lib/licenta/api-licenta/get_numar_serial_sistem.sh", rootpass)
+	if errSerial != nil {
+		return "", errSerial
+	}
+	fmt.Println(string(serial))
 
 	_, errTblSistem := db.Exec(
 		`INSERT INTO
@@ -137,9 +155,14 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		if errTblSistem.(*mysql.MySQLError).Number == 1062 {
 			fmt.Println("Sistemul se afla deja in baza de date")
 		} else {
-			return errTblSistem
+			return string(serial), errTblSistem
 		}
 	}
+
+	return string(serial), nil
+}
+
+func LoadTblPlaciRetea(db *sql.DB, produs string, serial string) error {
 
 	placi_retea, errNIC := bashExec("/var/lib/licenta/api-licenta/get_placi_retea.sh")
 	if errNIC != nil {
@@ -209,6 +232,33 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 			return errTblPlaciRetea
 		}
 	}
+
+	return nil
+}
+
+func LoadDatabase(db *sql.DB, rootpass string) error {
+
+	model, errModel := LoadTblModel(db)
+	if errModel != nil {
+		return errModel
+	}
+
+	producator, errProducator := LoadTblProducator(db)
+	if errProducator != nil {
+		return errProducator
+	}
+
+	procesor, errProcesor := LoadTblProcesor(db)
+	if errProcesor != nil {
+		return errProcesor
+	}
+
+	serial, errSistem := LoadTblSistem(db, rootpass, procesor, producator, model)
+	if errSistem != nil {
+		return errSistem
+	}
+
+	LoadTblPlaciRetea(db, model, serial)
 
 	return nil
 }
