@@ -145,9 +145,9 @@ func loadDB(c *gin.Context, db *sql.DB, rootpass string) {
 	c.String(http.StatusOK, "%s", "Database Loaded")
 }
 
-func triggerLoadDB(c *gin.Context, rootpass string) {
+func triggerLoadDB(c *gin.Context, rootpass string, IPenv string) {
 
-	_, err := bashExec("/var/lib/licenta/api-licenta/update_db.sh", rootpass)
+	_, err := bashExec("/var/lib/licenta/api-licenta/update_db.sh", rootpass, IPenv)
 
 	fmt.Println(err)
 	if err != nil {
