@@ -25,6 +25,7 @@ func initRouters(ip string, port int, rootpass string, database *sql.DB) {
 		getUtilizareDisk(ctx, rootpass)
 	})
 	router.GET("/get-utilizare-RAM", getUtilizareRAM)
+	router.GET("/get-utilizare-CPU", getUtilizareCPU)
 	router.POST("/load-db", func(ctx *gin.Context) {
 		loadDB(ctx, database, rootpass)
 	})

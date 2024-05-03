@@ -235,6 +235,28 @@ func getUtilizareRAM(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+func getUtilizareCPU(c *gin.Context) {
+
+	output, err := bashExec("/var/lib/licenta/api-licenta/get_utilizare_cpu.sh")
+	fmt.Println(err)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		return
+	}
+
+	output_lines := strings.Split(string(output), "\n")
+	tmp_avgvals := strings.Split(output_lines[0], ":")[1]
+
+	result := map[string]string{
+		"15min":        strings.Split(tmp_avgvals, " ")[2],
+		"1min":         strings.Split(tmp_avgvals, " ")[0],
+		"5min":         strings.Split(tmp_avgvals, " ")[1],
+		"noProcessors": strings.Split(output_lines[1], ":")[1],
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 func loadDB(c *gin.Context, db *sql.DB, rootpass string) {
 
 	err := LoadDatabase(db, rootpass)
