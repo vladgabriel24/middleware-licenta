@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
@@ -14,11 +13,23 @@ func ConnectDB(user string, pass string, ip string, port int) (*sql.DB, error) {
 
 	fmt.Println("Connecting to the database...")
 
-	dsn := user + ":" + pass + "@" + "(" + ip + ":" + strconv.Itoa(port) + ")/metriciDB"
+	cfg_db := mysql.Config{
+		User:   user,
+		Passwd: pass,
+		Net:    "tcp",
+		Addr:   ip,
+		DBName: "metriciDB",
+	}
 
-	db, err := sql.Open("mysql", dsn)
+	db, err := sql.Open("mysql", cfg_db.FormatDSN())
 	if err != nil {
-		fmt.Println("An Error appeared while connecting to the database...")
+		fmt.Println("An Error appeared while opening the database...")
+		return nil, err
+	}
+
+	errcon := db.Ping()
+	if errcon != nil {
+		fmt.Println("An Error appeared while connecting the database...")
 		return nil, err
 	}
 
