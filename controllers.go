@@ -133,9 +133,9 @@ func getDateAruncatePlacaRetea(c *gin.Context) {
 	c.String(http.StatusOK, "%s", output)
 }
 
-func getDiskUtilization(c *gin.Context, rootpass string) {
+func getUtilizareDisk(c *gin.Context, rootpass string) {
 
-	output, err := bashExec("/var/lib/licenta/api-licenta/get_disk_utilization.sh", rootpass)
+	output, err := bashExec("/var/lib/licenta/api-licenta/get_utilizare_disk.sh", rootpass)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
 		return
@@ -198,6 +198,38 @@ func getDiskUtilization(c *gin.Context, rootpass string) {
 			fmt.Sprintf("%.2g", percentage_used) + "%"}
 
 		result[string(key)] = value
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+func getUtilizareRAM(c *gin.Context) {
+
+	output, err := bashExec("/var/lib/licenta/api-licenta/get_utilizare_ram.sh")
+	fmt.Println(err)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		return
+	}
+
+	output_lines := strings.Split(string(output), "\n")
+
+	tmpval_total, err_total := strconv.ParseFloat(strings.Split(output_lines[0], " ")[1], 64)
+	if err_total != nil {
+		fmt.Println("Error at conversion the total value for RAM utilization")
+	}
+
+	tmpval_avail, err_avail := strconv.ParseFloat(strings.Split(output_lines[1], " ")[1], 64)
+	if err_avail != nil {
+		fmt.Println("Error at conversion the available value for RAM utilization")
+	}
+
+	tmpval_used := tmpval_total - tmpval_avail
+
+	result := map[string]string{
+		"Free":  fmt.Sprintf("%.2g", tmpval_avail/(1024*1024)) + "G",
+		"Total": fmt.Sprintf("%.2g", tmpval_total/(1024*1024)) + "G",
+		"Used":  fmt.Sprintf("%.2g", tmpval_used/(1024*1024)) + "G",
 	}
 
 	c.JSON(http.StatusOK, result)
