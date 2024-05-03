@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -130,6 +131,76 @@ func getDateAruncatePlacaRetea(c *gin.Context) {
 	}
 
 	c.String(http.StatusOK, "%s", output)
+}
+
+func getDiskUtilization(c *gin.Context, rootpass string) {
+
+	output, err := bashExec("/var/lib/licenta/api-licenta/get_disk_utilization.sh", rootpass)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		return
+	}
+
+	output_lines := strings.Split(string(output), "\n")
+
+	result := make(map[string][4]string)
+
+	for i := 1; i < len(output_lines)-1; i++ {
+		key := strings.Split(output_lines[i], " ")[2]
+
+		tmpval_used := strings.Split(output_lines[i], " ")[0]
+		tmpval_avail := strings.Split(output_lines[i], " ")[1]
+
+		value_used, err_used := strconv.ParseFloat(tmpval_used[:len(tmpval_used)-1], 64)
+		if err_used != nil {
+			fmt.Println("Error at unit conversion for used variable disk usage")
+		}
+
+		value_avail, err_avail := strconv.ParseFloat(tmpval_avail[:len(tmpval_avail)-1], 64)
+		if err_avail != nil {
+			fmt.Println("Error at unit conversion for available variable disk usage")
+		}
+
+		unit_used := tmpval_used[len(tmpval_used)-1:]
+		unit_avail := tmpval_avail[len(tmpval_avail)-1:]
+
+		if unit_used == "K" {
+			value_used = value_used / (1024 * 1024)
+		}
+
+		if unit_used == "M" {
+			value_used = value_used / 1024
+		}
+
+		if unit_used == "T" {
+			value_used = value_used * 1024
+		}
+
+		if unit_avail == "K" {
+			value_avail = value_avail / (1024 * 1024)
+		}
+
+		if unit_avail == "M" {
+			value_avail = value_avail / 1024
+		}
+
+		if unit_avail == "T" {
+			value_avail = value_avail * 1024
+		}
+
+		value_free := value_avail - value_used
+
+		percentage_used := (value_used / value_avail) * 100
+
+		value := [4]string{fmt.Sprintf("%.2g", value_avail) + "G",
+			fmt.Sprintf("%.2g", value_used) + "G",
+			fmt.Sprintf("%.2g", value_free) + "G",
+			fmt.Sprintf("%.2g", percentage_used) + "%"}
+
+		result[string(key)] = value
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 func loadDB(c *gin.Context, db *sql.DB, rootpass string) {
