@@ -37,5 +37,5 @@ func Procesor() (string, error) {
 		return "", err
 	}
 
-	return string(output), err
+	return string(output[1:]), err
 }
