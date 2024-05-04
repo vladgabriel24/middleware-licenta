@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"middleware/web-service-gin/utils"
 	"os"
 
 	"gopkg.in/ini.v1"
@@ -29,6 +30,6 @@ func main() {
 	ip := env.Key("ip").String()
 	port, _ := env.Key("port").Int()
 
-	db := initDB(userdb, passdb, ipdb, portdb)
+	db := utils.InitDB(userdb, passdb, ipdb, portdb)
 	initRouters(ip, port, rootpass, db)
 }

@@ -1,10 +1,9 @@
-package main
+package utils
 
 import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -37,7 +36,7 @@ func ConnectDB(user string, pass string, ip string, port int) (*sql.DB, error) {
 	return db, nil
 }
 
-func initDB(user string, pass string, ip string, port int) *sql.DB {
+func InitDB(user string, pass string, ip string, port int) *sql.DB {
 
 	db, errdb := ConnectDB(user, pass, ip, port)
 	if errdb != nil {
@@ -52,7 +51,7 @@ func initDB(user string, pass string, ip string, port int) *sql.DB {
 func LoadTblModel(db *sql.DB) (string, error) {
 
 	// Preluam informatiile de sistem
-	produs, errProdus := bashExec("/var/lib/licenta/api-licenta/get_nume_produs_sistem.sh")
+	produs, errProdus := Nume()
 	if errProdus != nil {
 		return "", errProdus
 	}
@@ -78,7 +77,7 @@ func LoadTblModel(db *sql.DB) (string, error) {
 func LoadTblProducator(db *sql.DB) (string, error) {
 
 	// Preluam informatiile de sistem
-	furnizor, errFurnizor := bashExec("/var/lib/licenta/api-licenta/get_furnizor_sistem.sh")
+	furnizor, errFurnizor := Furnizor()
 	if errFurnizor != nil {
 		return "", errFurnizor
 	}
@@ -105,7 +104,7 @@ func LoadTblProducator(db *sql.DB) (string, error) {
 func LoadTblProcesor(db *sql.DB) (string, error) {
 
 	// Preluam informatiile de sistem
-	procesor, errProcesor := bashExec("/var/lib/licenta/api-licenta/get_procesor_sistem.sh")
+	procesor, errProcesor := Procesor()
 	if errProcesor != nil {
 		return "", errProcesor
 	}
@@ -133,7 +132,7 @@ func LoadTblSistem(db *sql.DB, rootpass string, procesor string, furnizor string
 
 	// Preluam informatiile de sistem
 
-	serial, errSerial := bashExec("/var/lib/licenta/api-licenta/get_numar_serial_sistem.sh", rootpass)
+	serial, errSerial := Serial(rootpass)
 	if errSerial != nil {
 		return "", errSerial
 	}
@@ -175,39 +174,36 @@ func LoadTblSistem(db *sql.DB, rootpass string, procesor string, furnizor string
 
 func LoadTblPlaciRetea(db *sql.DB, produs string, serial string) error {
 
-	placi_retea, errNIC := bashExec("/var/lib/licenta/api-licenta/get_placi_retea.sh")
+	placi_retea, errNIC := PlaciRetea()
 	if errNIC != nil {
 		return errNIC
 	}
 
-	NICs := strings.Split(string(placi_retea), "\n")
-	NICs = NICs[:len(NICs)-1]
+	fmt.Println(len(placi_retea))
 
-	fmt.Println(len(NICs))
+	for i := 0; i < len(placi_retea); i++ {
 
-	for i := 0; i < len(NICs); i++ {
+		fmt.Println(placi_retea[i])
 
-		fmt.Println(NICs[i])
-
-		stare_nic, errStareNIC := bashExec("/var/lib/licenta/api-licenta/get_stare_placa_retea.sh", NICs[i])
+		stare_nic, errStareNIC := StarePlacaRetea(placi_retea[i])
 		if errStareNIC != nil {
 			return errStareNIC
 		}
 		fmt.Println(string(stare_nic))
 
-		tx_nic, errTxNIC := bashExec("/var/lib/licenta/api-licenta/get_date_transmise_placa_retea.sh", NICs[i])
+		tx_nic, errTxNIC := DateTransmisePlacaRetea(placi_retea[i])
 		if errTxNIC != nil {
 			return errTxNIC
 		}
 		fmt.Println(string(tx_nic))
 
-		rx_nic, errRxNIC := bashExec("/var/lib/licenta/api-licenta/get_date_receptionate_placa_retea.sh", NICs[i])
+		rx_nic, errRxNIC := DateReceptionatePlacaRetea(placi_retea[i])
 		if errRxNIC != nil {
 			return errRxNIC
 		}
 		fmt.Println(string(rx_nic))
 
-		dropped_nic, errDroppedNIC := bashExec("/var/lib/licenta/api-licenta/get_date_aruncate_placa_retea.sh", NICs[i])
+		dropped_nic, errDroppedNIC := DateAruncatePlacaRetea(placi_retea[i])
 		if errDroppedNIC != nil {
 			return errDroppedNIC
 		}
@@ -237,7 +233,7 @@ func LoadTblPlaciRetea(db *sql.DB, produs string, serial string) error {
 				?,
 				?
 			)`,
-			string(produs), string(serial), string(NICs[i]), string(stare_nic), string(dropped_nic), string(rx_nic), string(tx_nic))
+			string(produs), string(serial), string(placi_retea[i]), string(stare_nic), string(dropped_nic), string(rx_nic), string(tx_nic))
 
 		if errTblPlaciRetea != nil {
 			return errTblPlaciRetea
@@ -270,6 +266,16 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 	}
 
 	LoadTblPlaciRetea(db, model, serial)
+
+	return nil
+}
+
+func TriggerLoadCrontab(rootpass string, IPenv string) error {
+
+	_, err := BashExec("/var/lib/licenta/api-licenta/update_db.sh", rootpass, IPenv)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
