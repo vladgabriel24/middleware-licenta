@@ -13,11 +13,12 @@ func ConnectDB(user string, pass string, ip string, port int) (*sql.DB, error) {
 	fmt.Println("Connecting to the database...")
 
 	cfg_db := mysql.Config{
-		User:   user,
-		Passwd: pass,
-		Net:    "tcp",
-		Addr:   ip,
-		DBName: "metriciDB",
+		User:                 user,
+		Passwd:               pass,
+		Net:                  "tcp",
+		Addr:                 ip,
+		DBName:               "metriciDB",
+		AllowNativePasswords: true,
 	}
 
 	db, err := sql.Open("mysql", cfg_db.FormatDSN())
