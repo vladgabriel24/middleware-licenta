@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"middleware/web-service-gin/utils"
+	"middleware/utils"
 
 	"github.com/gin-gonic/gin"
 )

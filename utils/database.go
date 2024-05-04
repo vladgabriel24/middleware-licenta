@@ -265,7 +265,10 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		return errSistem
 	}
 
-	LoadTblPlaciRetea(db, model, serial)
+	errRetea := LoadTblPlaciRetea(db, model, serial)
+	if errRetea != nil {
+		return errSistem
+	}
 
 	return nil
 }

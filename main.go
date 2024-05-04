@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"middleware/web-service-gin/utils"
+	"middleware/utils"
 	"os"
 
 	"gopkg.in/ini.v1"
