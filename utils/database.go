@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -244,6 +245,97 @@ func LoadTblPlaciRetea(db *sql.DB, produs string, serial string) error {
 	return nil
 }
 
+func LoadTblResurse(db *sql.DB, rootpass string, produs string, serial string) error {
+
+	// used/available for Disk
+
+	outputDisk, errDisk := UtilizareDisk(rootpass)
+	if errDisk != nil {
+		fmt.Println("Failed to execute the disk script for database load")
+		return errDisk
+	}
+
+	tmpUsedDisk, errTmpUsed := strconv.ParseFloat(outputDisk["/"][1][:len(outputDisk["/"][1])-1], 64)
+	if errTmpUsed != nil {
+		fmt.Println("Error at conversion the \"Used\" value for Disk utilization at database load")
+	}
+
+	tmpAvailDisk, errTmpAvail := strconv.ParseFloat(outputDisk["/"][0][:len(outputDisk["/"][0])-1], 64)
+	if errTmpAvail != nil {
+		fmt.Println("Error at conversion the \"Available\" value for Disk utilization at database load")
+	}
+
+	dateDisk := tmpUsedDisk / tmpAvailDisk
+
+	// (MemTotal-MemFree)/MemTotal for RAM
+
+	outputRAM, errRAM := UtilizareRAM()
+	if errRAM != nil {
+		fmt.Println("Failed to execute the RAM script for database load")
+		return errDisk
+	}
+
+	tmpFreeRam, errTmpFreeRam := strconv.ParseFloat(outputRAM["Free"][:len(outputRAM["Free"])-1], 64)
+	if errTmpFreeRam != nil {
+		fmt.Println("Error at conversion the \"Free\" value for RAM utilization at database load")
+	}
+
+	tmpTotalRam, errTmpTotalRam := strconv.ParseFloat(outputRAM["Total"][:len(outputRAM["Total"])-1], 64)
+	if errTmpTotalRam != nil {
+		fmt.Println("Error at conversion the \"Total\" value for RAM utilization at database load")
+	}
+
+	dateRAM := (tmpTotalRam - tmpFreeRam) / tmpTotalRam
+
+	// Load average 1 min/nr_processors
+
+	outputCPU, errCPU := UtilizareCPU()
+	if errCPU != nil {
+		fmt.Println("Failed to execute the CPU script for database load")
+		return errDisk
+	}
+
+	tmpLoad1min, errTmpLoad1min := strconv.ParseFloat(outputCPU["1min"], 64)
+	if errTmpLoad1min != nil {
+		fmt.Println("Error at conversion the \"1min\" value for CPU utilization at database load")
+	}
+
+	tmpNrProc, errTmpNrProc := strconv.ParseFloat(outputCPU["noProcessors"], 64)
+	if errTmpNrProc != nil {
+		fmt.Println("Error at conversion the \"noProcessors\" value for CPU utilization at database load")
+	}
+
+	dateCPU := tmpLoad1min / tmpNrProc
+
+	_, errTblResurse := db.Exec(
+		`INSERT INTO
+		tblResurse (
+			modelSistem, 
+			numarSerialSistem, 
+			utilizareCPU, 
+			utilizareDisk,
+			utilizareRAM
+		)
+		VALUES (
+			(
+				SELECT idModel
+				FROM tblModel
+				WHERE numeModel = ?
+			),
+			?,
+			?,
+			?,
+			?
+		)`,
+		string(produs), string(serial), fmt.Sprintf("%.2g", dateCPU), fmt.Sprintf("%.2g", dateDisk), fmt.Sprintf("%.2g", dateRAM))
+
+	if errTblResurse != nil {
+		return errTblResurse
+	}
+
+	return nil
+}
+
 func LoadDatabase(db *sql.DB, rootpass string) error {
 
 	model, errModel := LoadTblModel(db)
@@ -269,6 +361,11 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 	errRetea := LoadTblPlaciRetea(db, model, serial)
 	if errRetea != nil {
 		return errSistem
+	}
+
+	errResurse := LoadTblResurse(db, rootpass, model, serial)
+	if errResurse != nil {
+		return errResurse
 	}
 
 	return nil

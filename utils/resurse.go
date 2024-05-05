@@ -64,10 +64,12 @@ func UtilizareDisk(rootpass string) (map[string][4]string, error) {
 
 		percentage_used := (value_used / value_avail) * 100
 
-		value := [4]string{fmt.Sprintf("%.2g", value_avail) + "G",
+		value := [4]string{
+			fmt.Sprintf("%.2g", value_avail) + "G",
 			fmt.Sprintf("%.2g", value_used) + "G",
 			fmt.Sprintf("%.2g", value_free) + "G",
-			fmt.Sprintf("%.2g", percentage_used) + "%"}
+			fmt.Sprintf("%.2g", percentage_used) + "%",
+		}
 
 		result[string(key)] = value
 	}
