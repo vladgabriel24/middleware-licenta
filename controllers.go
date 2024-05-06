@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 
 	"middleware/utils"
@@ -14,7 +13,7 @@ func getNume(c *gin.Context) {
 
 	output, err := utils.Nume()
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_nume_produs_sistem script": err})
 		return
 	}
 
@@ -25,7 +24,7 @@ func getSerial(c *gin.Context, rootpass string) {
 
 	output, err := utils.Serial(rootpass)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_numar_serial_sistem script": err})
 		return
 	}
 
@@ -36,7 +35,7 @@ func getFurnizor(c *gin.Context) {
 
 	output, err := utils.Furnizor()
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_furnizor_sistem script": err})
 		return
 	}
 
@@ -47,7 +46,7 @@ func getProcesor(c *gin.Context) {
 
 	output, err := utils.Procesor()
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_procesor_sistem script": err})
 		return
 	}
 
@@ -58,7 +57,7 @@ func getPlaciRetea(c *gin.Context) {
 
 	output, err := utils.PlaciRetea()
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_placi_retea script": err})
 		return
 	}
 
@@ -71,7 +70,7 @@ func getStarePlacaRetea(c *gin.Context) {
 
 	output, err := utils.StarePlacaRetea(param)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_stare_placa_retea script": err})
 		return
 	}
 
@@ -84,7 +83,7 @@ func getDateTransmisePlacaRetea(c *gin.Context) {
 
 	output, err := utils.DateTransmisePlacaRetea(param)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_date_transmise_placa_retea script": err})
 		return
 	}
 
@@ -97,7 +96,7 @@ func getDateReceptionatePlacaRetea(c *gin.Context) {
 
 	output, err := utils.DateReceptionatePlacaRetea(param)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_date_receptionate_placa_retea script": err})
 		return
 	}
 
@@ -110,7 +109,7 @@ func getDateAruncatePlacaRetea(c *gin.Context) {
 
 	output, err := utils.DateAruncatePlacaRetea(param)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_date_aruncate_placa_retea script": err})
 		return
 	}
 
@@ -121,7 +120,7 @@ func getUtilizareDisk(c *gin.Context, rootpass string) {
 
 	output, err := utils.UtilizareDisk(rootpass)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_utilizare_disk script": err})
 		return
 	}
 
@@ -132,7 +131,7 @@ func getUtilizareRAM(c *gin.Context) {
 
 	output, err := utils.UtilizareRAM()
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_utilizare_ram script": err})
 		return
 	}
 
@@ -143,7 +142,7 @@ func getUtilizareCPU(c *gin.Context) {
 
 	output, err := utils.UtilizareCPU()
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to execute script")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_utilizare_cpu script": err})
 		return
 	}
 
@@ -153,10 +152,8 @@ func getUtilizareCPU(c *gin.Context) {
 func loadDB(c *gin.Context, db *sql.DB, rootpass string) {
 
 	err := utils.LoadDatabase(db, rootpass)
-
-	fmt.Println(err)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to load the database")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to load the database": err})
 		return
 	}
 
@@ -165,13 +162,11 @@ func loadDB(c *gin.Context, db *sql.DB, rootpass string) {
 
 func triggerLoadDB(c *gin.Context, rootpass string, IPenv string) {
 
-	_, err := utils.BashExec("/var/lib/licenta/api-licenta/update_db.sh", rootpass, IPenv)
-
-	fmt.Println(err)
+	output, err := utils.TriggerLoadCrontab(rootpass, IPenv)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, "Failed to trigger the load database crontab job")
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to trigger the load database crontab job": err})
 		return
 	}
 
-	c.String(http.StatusOK, "%s", "Database Crontab Activated")
+	c.String(http.StatusOK, "%s", output)
 }

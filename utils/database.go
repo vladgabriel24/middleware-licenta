@@ -371,12 +371,12 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 	return nil
 }
 
-func TriggerLoadCrontab(rootpass string, IPenv string) error {
+func TriggerLoadCrontab(rootpass string, IPenv string) (string, error) {
 
-	_, err := BashExec("/var/lib/licenta/api-licenta/update_db.sh", rootpass, IPenv)
+	output, err := BashExec("/var/lib/licenta/api-licenta/update_db.sh", rootpass, IPenv)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return string(output), nil
 }
