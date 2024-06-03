@@ -116,6 +116,56 @@ func getDateAruncatePlacaRetea(c *gin.Context) {
 	c.String(http.StatusOK, "%s", output)
 }
 
+func getDateRetea(c *gin.Context) {
+
+	NICs, err_nic := utils.PlaciRetea()
+	if err_nic != nil {
+		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_placi_retea script": err_nic})
+		return
+	}
+
+	result := make(map[string][4]string)
+
+	for i := 0; i < len(NICs); i++ {
+
+		stare, err_stare := utils.StarePlacaRetea(NICs[i])
+		if err_stare != nil {
+			c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_stare_placa_retea script": err_stare})
+			return
+		}
+
+		tx, err_tx := utils.DateTransmisePlacaRetea(NICs[i])
+		if err_tx != nil {
+			c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_date_transmise_placa_retea script": err_tx})
+			return
+		}
+
+		rx, err_rx := utils.DateReceptionatePlacaRetea(NICs[i])
+		if err_rx != nil {
+			c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_date_receptionate_placa_retea script": err_rx})
+			return
+		}
+
+		dropped, err_dropped := utils.DateAruncatePlacaRetea(NICs[i])
+		if err_dropped != nil {
+			c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to execute the get_date_aruncate_placa_retea script": err_dropped})
+			return
+		}
+
+		value := [4]string{
+			stare[:len(stare)-1],
+			tx[:len(tx)-1],
+			rx[:len(rx)-1],
+			dropped[:len(dropped)-1],
+		}
+
+		result[NICs[i]] = value
+
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 func getUtilizareDisk(c *gin.Context, rootpass string) {
 
 	output, err := utils.UtilizareDisk(rootpass)

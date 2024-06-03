@@ -21,6 +21,7 @@ func initRouters(ip string, port int, rootpass string, database *sql.DB) {
 	router.GET("/api/get-date-transmise-placa-retea", getDateTransmisePlacaRetea)
 	router.GET("/api/get-date-receptionate-placa-retea", getDateReceptionatePlacaRetea)
 	router.GET("/api/get-date-aruncate-placa-retea", getDateAruncatePlacaRetea)
+	router.GET("/api/get-date-retea", getDateRetea)
 	router.GET("/api/get-utilizare-disk", func(ctx *gin.Context) {
 		getUtilizareDisk(ctx, rootpass)
 	})
