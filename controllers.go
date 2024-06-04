@@ -218,5 +218,5 @@ func triggerLoadDB(c *gin.Context, rootpass string, IPenv string) {
 		return
 	}
 
-	c.String(http.StatusOK, "%s", output)
+	c.JSON(http.StatusOK, output)
 }
