@@ -31,5 +31,6 @@ func main() {
 	port, _ := env.Key("port").Int()
 
 	db := utils.InitDB(userdb, passdb, ipdb, portdb)
+	utils.TriggerLoadCrontab(rootpass, ip)
 	initRouters(ip, port, rootpass, db)
 }

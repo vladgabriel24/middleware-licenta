@@ -371,12 +371,13 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 	return nil
 }
 
-func TriggerLoadCrontab(rootpass string, IPenv string) (string, error) {
+func TriggerLoadCrontab(rootpass string, IPenv string) {
 
 	output, err := BashExec("/var/lib/licenta/api-licenta/update_db.sh", rootpass, IPenv)
 	if err != nil {
-		return "", err
+		fmt.Println("Fail to trigger the database cronjob")
+		return
 	}
 
-	return string(output), nil
+	fmt.Println(string(output))
 }

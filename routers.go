@@ -3,13 +3,25 @@ package main
 import (
 	"database/sql"
 	"strconv"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func initRouters(ip string, port int, rootpass string, database *sql.DB) {
 
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:4200"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	router.GET("/api/get-nume", getNume)
 	router.GET("/api/get-serial", func(ctx *gin.Context) {
 		getSerial(ctx, rootpass)
@@ -29,9 +41,6 @@ func initRouters(ip string, port int, rootpass string, database *sql.DB) {
 	router.GET("/api/get-utilizare-CPU", getUtilizareCPU)
 	router.POST("/api/load-db", func(ctx *gin.Context) {
 		loadDB(ctx, database, rootpass)
-	})
-	router.POST("/api/trigger-cron_db", func(ctx *gin.Context) {
-		triggerLoadDB(ctx, rootpass, ip)
 	})
 
 	router.Run(ip + ":" + strconv.Itoa(port))

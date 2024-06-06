@@ -209,14 +209,3 @@ func loadDB(c *gin.Context, db *sql.DB, rootpass string) {
 
 	c.String(http.StatusOK, "%s", "Database Loaded")
 }
-
-func triggerLoadDB(c *gin.Context, rootpass string, IPenv string) {
-
-	output, err := utils.TriggerLoadCrontab(rootpass, IPenv)
-	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, map[string]error{"Failed to trigger the load database crontab job": err})
-		return
-	}
-
-	c.JSON(http.StatusOK, output)
-}
