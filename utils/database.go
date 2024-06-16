@@ -130,21 +130,44 @@ func LoadTblProcesor(db *sql.DB) (string, error) {
 	return string(procesor), nil
 }
 
-func LoadTblSistem(db *sql.DB, rootpass string, procesor string, furnizor string, produs string) (string, error) {
+func LoadTblSerial(db *sql.DB, rootpass string) (string, error) {
 
 	// Preluam informatiile de sistem
-
 	serial, errSerial := Serial(rootpass)
 	if errSerial != nil {
 		return "", errSerial
 	}
 	fmt.Println(string(serial))
 
+	_, errTblSerial := db.Exec(
+		`INSERT INTO
+		tblSerial (numarSerial)
+		VALUES
+		(?)`,
+		string(serial))
+
+	if errTblSerial != nil {
+		if errTblSerial.(*mysql.MySQLError).Number == 1062 {
+			fmt.Println("Numarul serial se afla deja in baza de date")
+		} else {
+			return string(serial), errTblSerial
+		}
+	}
+
+	return string(serial), nil
+}
+
+func LoadTblSistem(db *sql.DB, rootpass string, procesor string, furnizor string, produs string, serial string) (string, error) {
+
 	_, errTblSistem := db.Exec(
 		`INSERT INTO
 		tblSistem (numarSerial,modelProcesor,producatorSistem,modelSistem)
 		VALUES (
-			?,
+			(
+				SELECT idSerial
+				FROM tblSerial
+				WHERE numarSerial = ?
+			),
 			(
 				SELECT idProcesor
 				FROM tblProcesor
@@ -353,7 +376,12 @@ func LoadDatabase(db *sql.DB, rootpass string) error {
 		return errProcesor
 	}
 
-	serial, errSistem := LoadTblSistem(db, rootpass, procesor, producator, model)
+	serial, errSerial := LoadTblSerial(db, rootpass)
+	if errSerial != nil {
+		return errSerial
+	}
+
+	serial, errSistem := LoadTblSistem(db, rootpass, procesor, producator, model, serial)
 	if errSistem != nil {
 		return errSistem
 	}
