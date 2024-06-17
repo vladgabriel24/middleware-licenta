@@ -216,6 +216,16 @@ func LoadTblPlaciRetea(db *sql.DB, produs string, serial string) error {
 		}
 		fmt.Println(string(stare_nic))
 
+		var stare_nic_codata int
+
+		if string(stare_nic) == "up" {
+			stare_nic_codata = 1
+		} else if string(stare_nic) == "down" {
+			stare_nic_codata = 0
+		} else {
+			stare_nic_codata = 2
+		}
+
 		tx_nic, errTxNIC := DateTransmisePlacaRetea(placi_retea[i])
 		if errTxNIC != nil {
 			return errTxNIC
@@ -251,14 +261,18 @@ func LoadTblPlaciRetea(db *sql.DB, produs string, serial string) error {
 					FROM tblModel
 					WHERE numeModel = ?
 				),
-				?,
+				(
+					SELECT idSerial
+					FROM tblSerial
+					WHERE numarSerial = ?
+				),
 				?,
 				?,
 				?,
 				?,
 				?
 			)`,
-			string(produs), string(serial), string(placi_retea[i]), string(stare_nic), string(dropped_nic), string(rx_nic), string(tx_nic))
+			string(produs), string(serial), string(placi_retea[i]), stare_nic_codata, string(dropped_nic), string(rx_nic), string(tx_nic))
 
 		if errTblPlaciRetea != nil {
 			return errTblPlaciRetea
@@ -345,7 +359,11 @@ func LoadTblResurse(db *sql.DB, rootpass string, produs string, serial string) e
 				FROM tblModel
 				WHERE numeModel = ?
 			),
-			?,
+			(
+				SELECT idSerial
+				FROM tblSerial
+				WHERE numarSerial = ?
+			),
 			?,
 			?,
 			?
