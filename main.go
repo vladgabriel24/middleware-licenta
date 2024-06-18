@@ -32,5 +32,6 @@ func main() {
 
 	db := utils.InitDB(userdb, passdb, ipdb, portdb)
 	utils.TriggerLoadCrontab(rootpass, ip)
+	utils.UtilizareDisk(rootpass)
 	initRouters(ip, port, rootpass, db)
 }
