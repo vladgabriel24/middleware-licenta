@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -218,9 +220,9 @@ func LoadTblPlaciRetea(db *sql.DB, produs string, serial string) error {
 
 		var stare_nic_codata int
 
-		if string(stare_nic) == "up" {
+		if strings.Contains(string(stare_nic), "up") {
 			stare_nic_codata = 1
-		} else if string(stare_nic) == "down" {
+		} else if strings.Contains(string(stare_nic), "down") {
 			stare_nic_codata = 0
 		} else {
 			stare_nic_codata = 2
@@ -342,7 +344,8 @@ func LoadTblResurse(db *sql.DB, rootpass string, produs string, serial string) e
 		fmt.Println("Error at conversion the \"noProcessors\" value for CPU utilization at database load")
 	}
 
-	dateCPU := tmpLoad1min / tmpNrProc
+	dateCPU := new(big.Float)
+	dateCPU.SetFloat64(tmpLoad1min / tmpNrProc)
 
 	_, errTblResurse := db.Exec(
 		`INSERT INTO
@@ -368,7 +371,7 @@ func LoadTblResurse(db *sql.DB, rootpass string, produs string, serial string) e
 			?,
 			?
 		)`,
-		string(produs), string(serial), fmt.Sprintf("%.2g", dateCPU), fmt.Sprintf("%.2g", dateDisk), fmt.Sprintf("%.2g", dateRAM))
+		string(produs), string(serial), dateCPU.Text('e', 40), fmt.Sprintf("%.17g", dateDisk), fmt.Sprintf("%.17g", dateRAM))
 
 	if errTblResurse != nil {
 		return errTblResurse
